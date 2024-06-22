@@ -3,3 +3,4 @@ pyaudio
 gtts
 pygame
 pandas
+pywhatkit
