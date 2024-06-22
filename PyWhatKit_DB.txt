@@ -113,3 +113,43 @@ Time: 13:44
 Phone Number: +393276643215
 Message: Patient Lucia recap: name: Lucia gender: Female age: 24 message: prova
 --------------------
+Date: 22/6/2024
+Time: 15:2
+Phone Number: +393774071538
+Message: Lucia needs your help!Please get in contact as soon as possible!
+--------------------
+Date: 22/6/2024
+Time: 15:2
+Phone Number: +393276643215
+Message: Lucia needs your help!Please get in contact as soon as possible!
+--------------------
+Date: 22/6/2024
+Time: 15:57
+Phone Number: +393774071538
+Message: Lucia needs your help!Please get in contact as soon as possible!
+--------------------
+Date: 22/6/2024
+Time: 15:57
+Phone Number: +393276643215
+Message: Lucia needs your help!Please get in contact as soon as possible!
+--------------------
+Date: 22/6/2024
+Time: 16:5
+Phone Number: +393774071538
+Message: Lucia needs your help!Please get in contact as soon as possible!
+--------------------
+Date: 22/6/2024
+Time: 16:5
+Phone Number: +393276643215
+Message: Lucia needs your help!Please get in contact as soon as possible!
+--------------------
+Date: 22/6/2024
+Time: 16:8
+Phone Number: +393774071538
+Message: Lucia needs your help!Please get in contact as soon as possible!
+--------------------
+Date: 22/6/2024
+Time: 16:8
+Phone Number: +393276643215
+Message: Lucia needs your help!Please get in contact as soon as possible!
+--------------------
