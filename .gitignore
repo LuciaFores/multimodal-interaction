@@ -4,3 +4,5 @@ model
 patient_registry_test.csv
 therapy_plan.csv
 PyWhatKit_DB.txt
+ocr_test
+PyWhatKit_DB.txt

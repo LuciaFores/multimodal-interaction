@@ -1,6 +1,9 @@
+numpy<2.0
 vosk
 pyaudio
 gtts
 pygame
 pandas
 pywhatkit
+paddlepaddle
+paddleocr
