@@ -4,7 +4,8 @@ pyaudio
 gtts
 pygame
 pandas
-pywhatkit
+telethon
 paddlepaddle
 paddleocr
 thefuzz
+python-dotenv
