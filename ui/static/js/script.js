@@ -6,17 +6,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('current-date').innerText = data.date;
                 document.getElementById('current-time').innerText = data.time;
             });
+
+        fetch('/next_medication')
+            .then(response => response.json())
+            .then(data => {
+                if (data.time && data.medicines) {
+                    let alertText = `Prossimo farmaco alle ${data.time}: `;
+                    data.medicines.forEach(medicine => {
+                        alertText += `${medicine[0]} (${medicine[1]}), `;
+                    });
+                    alertText = alertText.slice(0, -2); // Remove the last comma and space
+                    document.getElementById('next-medication-alert').innerText = alertText;
+                } else {
+                    document.getElementById('next-medication-alert').innerText = "Nessun farmaco pianificato.";
+                }
+            });
     }
 
     updateTime();
-    setInterval(updateTime, 1000);
-
-    // Function to find the next medication time
-    function updateNextMedication() {
-        // Logic to find the next medication from the therapy plan
-        // You need to implement this based on the current time and the therapy plan
-    }
-
-    updateNextMedication();
-    setInterval(updateNextMedication, 60000); // Update every minute
+    setInterval(updateTime, 1000); // Update every 10 seconds
 });

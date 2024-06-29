@@ -51,19 +51,19 @@ async def main():
         await asyncio.sleep(1)
         await event.respond(f"{patient_name} ha bisogno del tuo aiuto!\nMettiti in contatto il prima possible!")
     
-    @client.on(events.NewMessage(pattern="/sendrecap<([a-zA-Z' ]+)><(bene|male)><([a-zA-Z0-9./_-]+)><(monday|tuesday|wednesday|thursday|friday|saturday|sunday)-([01]?[0-9]|2[0-3]):([0-5][0-9])>"))
+    @client.on(events.NewMessage(pattern="/sendrecap<([a-zA-Z' ]+)><(bene|male)><(monday|tuesday|wednesday|thursday|friday|saturday|sunday)-([01]?[0-9]|2[0-3]):([0-5][0-9])>"))
     async def handler(event):
         msg = event.message.text
         await event.delete()
-        pattern = r"/sendrecap<([a-zA-Z' ]+)><(bene|male)><([a-zA-Z0-9./_-]+)><(monday|tuesday|wednesday|thursday|friday|saturday|sunday)-([01]?[0-9]|2[0-3]):([0-5][0-9])>"
+        pattern = r"/sendrecap<([a-zA-Z' ]+)><(bene|male)><(monday|tuesday|wednesday|thursday|friday|saturday|sunday)-([01]?[0-9]|2[0-3]):([0-5][0-9])>"
         match = re.match(pattern, msg)
         if match:
             patient_name = match.group(1)
             feeling = match.group(2)
-            image_path = match.group(3)
-            day = italian_days[match.group(4)]
-            hour = match.group(5)
-            minute = match.group(6)
+            day = italian_days[match.group(3)]
+            hour = match.group(4)
+            minute = match.group(5)
+            image_path = f'medicine/{match.group(3)}'
         await asyncio.sleep(1)
         await event.respond(f"Ecco il recap per {patient_name}.\nSi sente {feeling}.\n{day} alle {hour}:{minute} ha preso i seguenti farmaci:")
         for img in os.listdir(f"./{image_path}"):
