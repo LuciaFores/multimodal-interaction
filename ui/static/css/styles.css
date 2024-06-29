@@ -1,0 +1,56 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-size: cover;
+    background-position: center;
+    animation: changeBackground 30s infinite;
+}
+
+@keyframes changeBackground {
+    0% { background-image: url('../images/image1.jpg'); }
+    25% { background-image: url('../images/image2.jpg'); }
+    50% { background-image: url('../images/image3.jpg'); }
+    75% { background-image: url('../images/image4.jpg'); }
+    100% { background-image: url('../images/image5.jpg'); }
+}
+
+.container {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+}
+
+.therapy-plan {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+}
+
+.therapy-plan table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.therapy-plan th, .therapy-plan td {
+    border: 1px solid black;
+    padding: 8px;
+}
+
+.clock-widget {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    text-align: right;
+}
+
+.alert {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background-color: #e6e6fa;
+    color: black;
+    padding: 10px;
+    border-radius: 5px;
+    border: 2px solid #9400d3;
+}

@@ -9,3 +9,4 @@ paddlepaddle
 paddleocr
 thefuzz
 python-dotenv
+flask

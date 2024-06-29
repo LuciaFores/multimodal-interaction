@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Therapy Plan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+</head>
+<body>
+    <div class="container">
+        <div class="therapy-plan">
+            <h2>Therapy Plan for {{ current_day.capitalize() }}</h2>
+            <table>
+                <thead>
+                    <tr>
+                        {% for column in columns %}
+                        <th>{{ column }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in therapy_plan %}
+                    <tr>
+                        {% for column in columns %}
+                        {% if entry[column] %}
+                        <td>{{ entry[column] }}</td>
+                        {% endif %}
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="clock-widget">
+            <div id="current-date"></div>
+            <div id="current-time"></div>
+        </div>
+        <div class="alert">
+            <p>Ricorda di pronunciare <b>aiuto</b> per inviare un messaggio di aiuto ai tuoi caregiver</p>
+        </div>
+    </div>
+</body>
+</html>
