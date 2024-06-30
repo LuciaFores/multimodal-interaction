@@ -5,12 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Therapy Plan</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
 </head>
 <body>
-    <div class="background-image">
+    <div id="background-image" class="background-image">
         <div class="container">
-            <div class="therapy-plan">
+            <div id="therapy-plan" class="therapy-plan">
                 <h2>Piano Terapeutico per {{ display_day.capitalize() }}</h2>
                 <table>
                     <thead>
@@ -31,14 +35,14 @@
                     </tbody>
                 </table>
             </div>
-            <div class="clock-widget">
+            <div id="clock-widget" class="clock-widget">
                 <div id="current-date"></div>
                 <div id="current-time"></div>
             </div>
-            <div class="alert">
-                <p>Ricorda di pronunciare <b>aiuto</b> per inviare un messaggio di aiuto ai tuoi caregiver</p>
+            <div id="alert" class="alert">
+                <p>Ricorda: puoi pronunciare <b>aiuto</b> per inviare un messaggio di aiuto ai tuoi caregiver</p>
             </div>
-            <div class="alert-medication">
+            <div id="alert-medication" class="alert-medication">
                 <p id="next-medication-alert"></p>
             </div>
         </div>

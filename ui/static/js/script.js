@@ -25,4 +25,34 @@ document.addEventListener('DOMContentLoaded', function () {
 
     updateTime();
     setInterval(updateTime, 1000); // Update every 10 seconds
+
+    // Setup Socket.IO
+    const socket = io();
+
+    // Listen for background change events
+    socket.on('background_event_change', function (data) {
+        const backgroundImageDiv = document.getElementById('background-image');
+        backgroundImageDiv.style.backgroundImage = `url('/static/images/${data.image}')`;
+        var therapyPlanElement = document.getElementById('therapy-plan');
+        therapyPlanElement.style.display = 'none';
+        var clockWidgetElement = document.getElementById('clock-widget');
+        clockWidgetElement.style.display = 'none';
+        var alertElement = document.getElementById('alert');
+        alertElement.style.display = 'none';
+        var alertMedicationElement = document.getElementById('alert-medication');
+        alertMedicationElement.style.display = 'none';
+    });
+
+    socket.on('background_idle_change', function (data) {
+        const backgroundImageDiv = document.getElementById('background-image');
+        backgroundImageDiv.style.backgroundImage = `url('/static/images/${data.image}')`;
+        var therapyPlanElement = document.getElementById('therapy-plan');
+        therapyPlanElement.style.display = '';
+        var clockWidgetElement = document.getElementById('clock-widget');
+        clockWidgetElement.style.display = '';
+        var alertElement = document.getElementById('alert');
+        alertElement.style.display = '';
+        var alertMedicationElement = document.getElementById('alert-medication');
+        alertMedicationElement.style.display = '';
+    });
 });

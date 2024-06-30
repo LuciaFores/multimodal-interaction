@@ -15,6 +15,7 @@ import requests
 from dotenv import load_dotenv
 import os
 import threading
+from flask_socketio import SocketIO, emit
 
 ### MULTIMODAL INTERACTION ###
 # define a function that will be used to setup the speech recognition module
@@ -169,10 +170,12 @@ def speech_therapy_plan_info(patient, medicines, mixer):
 def analyze_feelings(patient, feelings, mixer, stream, recognizer):
     has_multiple_caregivers = len(patient['chat_ids']) > 1
     if feelings.startswith("ben"):
+        socketio.emit('background_event_change', {'image': 'medication_happy_background.jpg'})
         text = f"Bene {patient['name']}, sono contento di sentire che ti senti bene!"
         speech_syntesis(text, mixer)
-        return
+        return "bene"
     elif feelings.startswith("mal"):
+        socketio.emit('background_event_change', {'image': 'medication_sad_background.jpg'})
         text = f"Mi dispiace {patient['name']}, spero tu ti senta meglio presto."
         if has_multiple_caregivers:
             text += "Vuoi inviare un messaggio di aiuto ai tuoi caregiver?"
@@ -187,6 +190,7 @@ def analyze_feelings(patient, feelings, mixer, stream, recognizer):
                 speech = recognize_speech(recognizer, stream)
             stream.stop_stream()
             if speech.startswith("sì"):
+                socketio.emit('background_event_change', {'image': 'alert_background.jpg'})
                 send_help_message(patient, mixer)
                 break
             elif speech.startswith("no"):
@@ -194,11 +198,11 @@ def analyze_feelings(patient, feelings, mixer, stream, recognizer):
             else:
                 text = "Scusa non ho capito, potresti rispondermi con sì o no?"
                 speech_syntesis(text, mixer)
-        return
+        return "male"
     else:
         text = "Scusa non ho capito, potresti rispondermi con bene o male?"
         speech_syntesis(text, mixer)
-        return
+        return ""
     
 def speech_medicine_instructions(medicine, mixer):
     text = f"Prendi {medicine}; quando sei pronto a farmi riconoscere la scatola dimmi foto."
@@ -295,13 +299,16 @@ def interaction():
         speech = recognize_speech(recognizer, stream)
         if speech != None and 'aiuto' in speech:
             stream.stop_stream()
+            socketio.emit('background_event_change', {'image': 'alert_background.jpg'})
             send_help_message(patient, mixer)
             speech = None
             stream.start_stream()
+            socketio.emit('background_idle_change', {'image': 'background.jpg'})
         # if the helper finds out that is time to take a medicine start the therapy plan procedure
         current_time = time.strftime('%H:%M', time.localtime())
         if current_time in therapy_plan.keys():
             stream.stop_stream()
+            socketio.emit('background_event_change', {'image': 'medication_background.jpg'})
             delete_images(today)
             # greet the patient and ask them how they are feeling
             greet_patient(patient, mixer)
@@ -313,22 +320,21 @@ def interaction():
                 # wait for the patient to say something
                     speech = recognize_speech(recognizer, stream)
                 stream.stop_stream()
-                analyze_feelings(patient, speech, mixer, stream, recognizer)
-                if speech.startswith("ben"):
-                    feeling = "bene"
+                feeling = analyze_feelings(patient, speech, mixer, stream, recognizer)
+                if feeling != "":
                     break
-                elif speech.startswith("mal"):
-                    feeling = "male"
-                    break
+            socketio.emit('background_event_change', {'image': 'medication_background.jpg'})
             # get the current medicines to take
             medicines = therapy_plan[current_time]
             # pronunce the therapy plan rules
             speech_therapy_plan_info(patient, medicines, mixer)
             for medicine, quantity in medicines:
+                socketio.emit('background_event_change', {'image': 'medication_background.jpg'})
                 speech_medicine_instructions(medicine, mixer)
                 box_recognized = False
                 # while the box is not recognized
                 while not box_recognized:
+                    socketio.emit('background_event_change', {'image': 'photo_background.jpg'})
                     stream.start_stream()
                     while True:
                         speech = None
@@ -340,6 +346,7 @@ def interaction():
                     # recognize the medicine box
                     box_recognized = recognize_medicine(today, medicine, ocr_model)
                     if box_recognized:
+                        socketio.emit('background_event_change', {'image': 'medication_happy_background.jpg'})
                         get_medicine_instructions(patient, quantity, mixer)
                         stream.start_stream()
                         while True:
@@ -348,17 +355,21 @@ def interaction():
                             if speech != None and 'avanti' in speech:
                                 break
                     else:
-                        text = "Scusa non ho riconosciuto la scatola, potresti riprovare?"
+                        socketio.emit('background_event_change', {'image': 'medication_sad_background.jpg'})
+                        text = "Scusa non è la scatola corretta, potresti riprovare?"
                         speech_syntesis(text, mixer)
             stream.stop_stream()
+            socketio.emit('background_event_change', {'image': 'medication_background.jpg'})
             goodbye_patient(patient, mixer)
             current_hour = time.strftime('%H')
             current_minute = time.strftime('%M') 
             send_recap_message(patient, feeling, today, current_hour, current_minute)
+            socketio.emit('background_idle_change', {'image': 'background.jpg'})
 
 
 ### UI ###
 app = Flask(__name__)
+socketio = SocketIO(app)
 
 # Function to translate to italian the current day
 def translate_day(day):
@@ -391,8 +402,8 @@ def get_therapy_plan_display(day):
     # Rename the columns
     column_mapping = {'hour': 'Orario'}
     for i in range(1, (len(df.columns) - 1) // 2 + 1):
-        column_mapping[f'medicine_{i}'] = f'Medicinale {i}'
-        column_mapping[f'quantity_medicine_{i}'] = f'Quantità Medicinale {i}'
+        column_mapping[f'medicine_{i}'] = f'Medicinale_{i}'
+        column_mapping[f'quantity_medicine_{i}'] = f'Quantità_{i}'
 
     df = df.rename(columns=column_mapping)
 
@@ -436,4 +447,4 @@ def next_medication():
 if __name__ == '__main__':
     background_thread = threading.Thread(target=interaction)
     background_thread.start()
-    app.run(debug=False)
+    socketio.run(app, debug=False)

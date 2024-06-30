@@ -10,3 +10,4 @@ paddleocr
 thefuzz
 python-dotenv
 flask
+flask-socketio

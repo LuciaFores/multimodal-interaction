@@ -1,17 +1,10 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Noto Sans', sans-serif;
     margin: 0;
     padding: 0;
     width: 100%;
 }
 
-/*@keyframes changeBackground {
-    0% { background-image: url('../images/image1.jpg'); }
-    25% { background-image: url('../images/image2.jpg'); }
-    50% { background-image: url('../images/image3.jpg'); }
-    75% { background-image: url('../images/image4.jpg'); }
-    100% { background-image: url('../images/image5.jpg'); }
-}*/
 
 .background-image {
     position: fixed;
@@ -41,12 +34,23 @@ body {
     border-radius: 10px;
 }
 
+h2{
+    font-size: 36px;
+}
+
 .therapy-plan table {
     border-collapse: collapse;
     width: 100%;
 }
 
-.therapy-plan th, .therapy-plan td {
+.therapy-plan th {
+    font-size: 20px;
+    border: 1px solid black;
+    padding: 8px;
+}
+
+.therapy-plan td {
+    font-size: 18px;
     border: 1px solid black;
     padding: 8px;
 }
@@ -55,6 +59,7 @@ body {
     position: absolute;
     top: 20px;
     right: 20px;
+    font-size: 30px;
     text-align: right;
     background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background for readability */
     padding: 10px;
@@ -63,8 +68,10 @@ body {
 
 .alert {
     position: absolute;
-    bottom: 20px;
+    top: 200px;
     right: 20px;
+    width: 500px;
+    font-size: 20px;
     background-color: #e6e6fa;
     color: black;
     padding: 10px;
@@ -74,8 +81,9 @@ body {
 
 .alert-medication {
     position: absolute;
-    bottom: 300px;
+    bottom: 20px;
     left: 20px;
+    font-size: 20px;
     background-color: #e6e6fa;
     color: black;
     padding: 10px;
