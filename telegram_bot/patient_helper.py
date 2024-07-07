@@ -21,38 +21,58 @@ italian_days = {
     "sunday": "Domenica"
 }
 
-async def send_image(user, image_path, name):
-    await client.send_file(user, image_path, caption=name)
-
-async def send_recap(user):
-    await client.send_message(user, "Here is the recap of the day")
-    for img in os.listdir("./ocr_test"):
-        await send_image(user, f"ocr_test/{img}", img)
 
 async def main():
+    """
+    Main function to start the Telegram bot and handle various commands.
+    """
     await client.start(bot_token=BOT_TOKEN)
+
     @client.on(events.NewMessage(pattern="/start"))
     async def handler(event):
+        """
+        Handle the /start command by sending a welcome message.
+
+        Args:
+            event (telethon.events.NewMessage.Event): The event object containing message details.
+        """
         await event.respond("Welcome to the patient helper!")
 
     @client.on(events.NewMessage(pattern="/help"))
     async def handler(event):
+        """
+        Handle the /help command by sending a help message.
+
+        Args:
+            event (telethon.events.NewMessage.Event): The event object containing message details.
+        """
         await event.respond("The bot will notify you when your assisted person needs help and when they took their medications.")
 
     @client.on(events.NewMessage(pattern="/sendhelp<([a-zA-Z' ]+)>"))
     async def handler(event):
+        """
+        Handle the /sendhelp command by notifying that the patient needs help.
+
+        Args:
+            event (telethon.events.NewMessage.Event): The event object containing message details.
+        """
         msg = event.message.text
         await event.delete()
         pattern = r"/sendhelp<([a-zA-Z' ]+)>"
         match = re.match(pattern, msg)
         if match:
             patient_name = match.group(1)
-        # wait 1 second before sending the message
         await asyncio.sleep(1)
         await event.respond(f"{patient_name} ha bisogno del tuo aiuto!\nMettiti in contatto il prima possible!")
     
     @client.on(events.NewMessage(pattern="/sendrecap<([a-zA-Z' ]+)><(bene|male)><(monday|tuesday|wednesday|thursday|friday|saturday|sunday)-([01]?[0-9]|2[0-3]):([0-5][0-9])>"))
     async def handler(event):
+        """
+        Handle the /sendrecap command by sending a recap of the patient's medication and feelings.
+
+        Args:
+            event (telethon.events.NewMessage.Event): The event object containing message details.
+        """
         msg = event.message.text
         await event.delete()
         pattern = r"/sendrecap<([a-zA-Z' ]+)><(bene|male)><(monday|tuesday|wednesday|thursday|friday|saturday|sunday)-([01]?[0-9]|2[0-3]):([0-5][0-9])>"

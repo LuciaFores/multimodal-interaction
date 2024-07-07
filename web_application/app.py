@@ -18,12 +18,16 @@ import threading
 from flask_socketio import SocketIO, emit
 
 ### MULTIMODAL INTERACTION ###
-# define a function that will be used to setup the speech recognition module
+
 def setup_speech_recognition():
-    # Load the model and create a recognizer
+    """
+    Setup the speech recognition module by loading the model and creating a recognizer.
+    
+    Returns:
+        tuple: A tuple containing the recognizer and the audio stream.
+    """
     model = Model("../model/vosk-model-small-it-0.22")
     recognizer = KaldiRecognizer(model, 16000)
-    # setup the microphone to record audio
     mic = pyaudio.PyAudio()
     stream = mic.open(
         format=pyaudio.paInt16,
@@ -32,74 +36,126 @@ def setup_speech_recognition():
         input=True,
         frames_per_buffer=8192
     )
-    # return the recognizer and the stream
     return recognizer, stream
 
-# define a function that will be used to setup the speech synthesis module
+
 def setup_speech_synthesis():
-    # setup the mixer to play the audio
+    """
+    Setup the speech synthesis module by initializing the mixer.
+    
+    Returns:
+        pygame.mixer: The initialized mixer object.
+    """
     mixer.init()
-    # return the mixer
     return mixer
 
+
 def setup_ocr():
-    # needed for the first run in which the ocr model will be downloaded
+    """
+    Setup the OCR module by initializing the PaddleOCR model for Italian language.
+    
+    Returns:
+        PaddleOCR: The initialized OCR model.
+    """
     ocr_model = PaddleOCR(lang='it')
     return ocr_model
 
-# define a function that will be used to recognize the speech
+
 def recognize_speech(recognizer, stream):
-    # read the audio data from the stream
+    """
+    Recognize speech from the audio stream.
+    
+    Args:
+        recognizer (KaldiRecognizer): The speech recognizer.
+        stream (pyaudio.Stream): The audio stream.
+    
+    Returns:
+        str or None: The recognized speech as a string, or None if no speech is recognized.
+    """
     data = stream.read(4096)
-    # check if the data is empty
     if len(data) == 0:
         return None
-    # check if the recognizer has recognized the speech
     if recognizer.AcceptWaveform(data):
-        # return the recognized speech
         return recognizer.Result()[14:-3] # remove the first 14 characters and the last 3 characters, needed to remove the metadata
-    # return None if the speech is not recognized
     return None
 
-# define a function that will be used to synthesize the speech
+
 def synthesize_speech(text):
-    # create a BytesIO object to store the mp3 file
+    """
+    Synthesize speech from the given text using Google Text-to-Speech.
+    
+    Args:
+        text (str): The text to be synthesized.
+    
+    Returns:
+        BytesIO: The synthesized speech as an MP3 file stored in a BytesIO object.
+    """
     mp3_fp = BytesIO()
-    # create a gTTS object and write the mp3 file to the BytesIO object and so perform the synthesis
     tts = gTTS(text, lang='it')
     tts.write_to_fp(mp3_fp)
     return mp3_fp
 
-# define a function that will be used to play the synthesized speech
+
 def play_speech(mixer, mp3_fp):
-    # set the BytesIO object to the beginning of the file
+    """
+    Play the synthesized speech from the given BytesIO object.
+    
+    Args:
+        mixer (pygame.mixer): The mixer object.
+        mp3_fp (BytesIO): The BytesIO object containing the MP3 file.
+    """
     mp3_fp.seek(0)
-    # play the mp3 file
     mixer.music.load(mp3_fp)
     mixer.music.play()
-    # wait until the audio is played
     while mixer.music.get_busy():
         time.sleep(0.1)
     return
 
+
 def get_bot_data(bot_token):
+    """
+    Get data from the Telegram bot using the provided bot token.
+    
+    Args:
+        bot_token (str): The Telegram bot token.
+    
+    Returns:
+        dict: The data received from the Telegram bot.
+    """
     url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
     response = requests.get(url)
     data = response.json()
     return data
 
+
 def get_chat_id(handle, data):
+    """
+    Get the chat ID for a specific Telegram handle from the bot data.
+    
+    Args:
+        handle (str): The Telegram handle.
+        data (dict): The data received from the Telegram bot.
+    
+    Returns:
+        str or None: The chat ID as a string, or None if not found.
+    """
     for i in data['result']:
         if 'message' in i.keys():
             if i['message']['chat']['username'] == handle:
                 return str(i['message']['chat']['id'])
 
+
 def get_patient_data():
+    """
+    Get patient data from a CSV file and retrieve Telegram chat IDs for caregivers.
+    
+    Returns:
+        dict: A dictionary containing patient data and chat IDs of caregivers.
+    """
     df_registry = pd.read_csv('../patient_registry.csv')
     load_dotenv()
     BOT_TOKEN = os.getenv("BOT_TOKEN")  
     bot_data = get_bot_data(BOT_TOKEN)
-    # create a dictionary with the patient data
     patient = {}
     patient['name'] = df_registry['name'][0]
     patient['gender'] = df_registry['gender'][0]
@@ -111,32 +167,66 @@ def get_patient_data():
         patient['chat_ids'].append(get_chat_id(handle, bot_data))
     return patient
 
+
 def get_therapy_plan(day):
+    """
+    Get the therapy plan for a specific day from a CSV file.
+    
+    Args:
+        day (str): The day of the week.
+    
+    Returns:
+        dict: A dictionary containing the therapy plan data.
+    """
     df_therapy_plan = pd.read_csv(f'../therapy_plan/therapy_plan_{day}.csv')
-    # create a dictionary with the therapy plan data
     therapy_plan = {}
-    # iterate over the therapy plan data and get only the rows for which the column medication_1 is not empty
     for _, row in df_therapy_plan.iterrows():
         if not pd.isna(row['medication_1']): # meaning that the patient must take at least one medication at that time
-            # get all the medications that the patient must take at that time
             medications_quantities = row.drop(['hour']).dropna().tolist()
             therapy = [(x, y) for x, y in zip(medications_quantities[::2], medications_quantities[1::2])]
             therapy_plan[row['hour']] = therapy
     return therapy_plan
 
+
 def speech_synthesis(text, mixer):
+    """
+    Synthesize and play speech from the given text.
+    
+    Args:
+        text (str): The text to be synthesized.
+        mixer (pygame.mixer): The mixer object for playing the synthesized speech.
+    """
     mp3_fp = synthesize_speech(text)
     play_speech(mixer, mp3_fp)
     return
 
+
 def send_telegram_message(bot_chat_id, bot_message):
+   """
+    Send a message to a Telegram chat using the bot token.
+    
+    Args:
+        bot_chat_id (str): The chat ID to send the message to.
+        bot_message (str): The message to be sent.
+    
+    Returns:
+        dict: The response from the Telegram API.
+    """
    load_dotenv()
    BOT_TOKEN = os.getenv("BOT_TOKEN") 
    send_text = 'https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage?chat_id=' + bot_chat_id + '&parse_mode=Markdown&text=' + bot_message
    response = requests.get(send_text)
    return response.json()
 
+
 def send_help_message(patient, mixer):
+    """
+    Send a help message to the patient's caregivers and synthesize speech for confirmation.
+    
+    Args:
+        patient (dict): The patient data.
+        mixer (pygame.mixer): The mixer object for playing the synthesized speech.
+    """
     has_multiple_caregivers = len(patient['chat_ids']) > 1
     if has_multiple_caregivers:
         text = f"{patient['name']} invio un messaggio ai tuoi caregiver."
@@ -152,12 +242,29 @@ def send_help_message(patient, mixer):
     speech_synthesis(text, mixer)
     return
 
+
 def greet_patient(patient, mixer):
+    """
+    Greet the patient by name and ask how they are feeling.
+    
+    Args:
+        patient (dict): The patient data.
+        mixer (pygame.mixer): The mixer object for playing the synthesized speech.
+    """
     text = f"Ciao {patient['name']}, come ti senti?"
     speech_synthesis(text, mixer)
     return
 
+
 def speech_therapy_plan_info(patient, medications, mixer):
+    """
+    Provide the patient with information about their therapy plan.
+    
+    Args:
+        patient (dict): The patient data.
+        medications (list): A list of medications to be taken.
+        mixer (pygame.mixer): The mixer object for playing the synthesized speech.
+    """
     text = f"{patient['name']} è il momento di prendere i seguenti farmaci: "
     for medication in medications:
         text += medication[0] + ", "
@@ -167,7 +274,21 @@ def speech_therapy_plan_info(patient, medications, mixer):
     speech_synthesis(text, mixer)
     return
 
+
 def analyze_feelings(patient, feelings, mixer, stream, recognizer):
+    """
+    Analyze the patient's feelings and take appropriate action.
+    
+    Args:
+        patient (dict): The patient data.
+        feelings (str): The patient's stated feelings.
+        mixer (pygame.mixer): The mixer object for playing the synthesized speech.
+        stream (pyaudio.Stream): The audio stream.
+        recognizer (KaldiRecognizer): The speech recognizer.
+    
+    Returns:
+        str: The patient's feelings.
+    """
     has_multiple_caregivers = len(patient['chat_ids']) > 1
     if feelings.startswith("ben"):
         socketio.emit('background_event_change', {'image': 'medication_happy_background.jpg'})
@@ -186,7 +307,6 @@ def analyze_feelings(patient, feelings, mixer, stream, recognizer):
             speech = None
             stream.start_stream()
             while speech == None:
-            # wait for the patient to say something
                 speech = recognize_speech(recognizer, stream)
             stream.stop_stream()
             if speech.startswith("sì"):
@@ -204,21 +324,33 @@ def analyze_feelings(patient, feelings, mixer, stream, recognizer):
         speech_synthesis(text, mixer)
         return ""
     
+    
 def speech_medication_instructions(medication, mixer):
+    """
+    Provide verbal instructions for taking the medication.
+
+    Args:
+        medication (str): The name of the medication.
+        mixer (pygame.mixer): The mixer object for playing the synthesized speech.
+    """
     text = f"Prendi {medication}; quando sei pronto a farmi riconoscere la scatola dimmi foto."
     speech_synthesis(text, mixer)
     return
 
-# define a function to take a picture of the medication box
-# and save the picture in the folder medications/today/{medication}.jpg
+
 def take_picture(today, medication):
+    """
+    Take a picture of the medication box and save it.
+
+    Args:
+        today (str): The current date.
+        medication (str): The name of the medication.
+    """
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("Error: Could not open video capture device.")
         return
-    # Capture a single frame
     ret, frame = cap.read()
-    # Release the webcam
     cap.release()
     if not ret:
         print("Error: Could not read frame from video capture device.")
@@ -226,10 +358,20 @@ def take_picture(today, medication):
     cv2.imwrite(f'../medications/{today}/{medication}.jpg', frame)
     return
 
-# define a function to recognize the medication box
-# the function will perform OCR on the image, then if the parameter medication of the function
-# is similar to one of the results of the OCR it will return True, otherwise False
+
 def recognize_medication(today, medication, ocr_model, threshold=80):
+    """
+    Recognize the medication box using OCR.
+
+    Args:
+        today (str): The current day.
+        medication (str): The name of the medication.
+        ocr_model (PaddleOCR): The OCR model for text extraction.
+        threshold (int, optional): The threshold for text similarity. Defaults to 80.
+    
+    Returns:
+        bool: True if the medication is recognized, False otherwise.
+    """
     img_path = f'../medications/{today}/{medication}.jpg'
     results = ocr_model.ocr(img_path)
     if results != [None]:
@@ -241,13 +383,30 @@ def recognize_medication(today, medication, ocr_model, threshold=80):
                     return True
     return False
 
+
 def get_medication_instructions(patient, quantity, mixer):
+    """
+    Provide verbal instructions for the correct medication and dosage.
+
+    Args:
+        patient (dict): The patient data.
+        quantity (str): The quantity of the medication to be taken.
+        mixer (pygame.mixer): The mixer object for playing the synthesized speech.
+    """
     text = f"Bene {patient['name']} è la scatola corretta, devi prenderne {quantity}."
     text += "Quando sei pronto a procedere con il prossimo farmaco pronuncia avanti"
     speech_synthesis(text, mixer)
     return
 
+
 def goodbye_patient(patient, mixer):
+    """
+    Say goodbye to the patient after all medications have been taken.
+
+    Args:
+        patient (dict): The patient data.
+        mixer (pygame.mixer): The mixer object for playing the synthesized speech.
+    """
     has_multiple_caregivers = len(patient['chat_ids']) > 1
     text = f"Bene {patient['name']} hai preso tutti i farmaci necessari."
     if has_multiple_caregivers:
@@ -263,18 +422,41 @@ def goodbye_patient(patient, mixer):
     speech_synthesis(text, mixer)
     return
 
+
 def send_recap_message(patient, feeling, today, hour, minute):
+    """
+    Send a recap message to the patient's caregivers.
+
+    Args:
+        patient (dict): The patient data.
+        feeling (str): The patient's feeling.
+        today (str): The current day.
+        hour (str): The current hour.
+        minute (str): The current minute.
+    """
     for chat_id in patient['chat_ids']:
         send_telegram_message(chat_id, f"/sendrecap<{patient['name']}><{feeling}><{today}-{hour}:{minute}>")
     return
 
+
 def delete_images(today):
+    """
+    Delete all medication images for the current day.
+
+    Args:
+        today (str): The current date.
+    """
     if os.listdir(f'../medications/{today}'):
         for image in os.listdir(f'../medications/{today}'):
             os.remove(f'../medications/{today}/{image}')
     return
 
+
 def interaction():
+    """
+    Main function of the system, is an infinite loop that starts all the functionalities
+    of the system.
+    """
     patient = get_patient_data()
     # define the starting day
     last_day = 'monday'
@@ -371,8 +553,17 @@ def interaction():
 app = Flask(__name__)
 socketio = SocketIO(app)
 
-# Function to translate to italian the current day
+
 def translate_day(day):
+    """
+    Translate the given day from English to Italian.
+
+    Args:
+        day (str): The day of the week in English (e.g., 'monday').
+
+    Returns:
+        str: The day of the week in Italian (e.g., 'Lunedì').
+    """
     italian_days = {
         'monday': 'Lunedì',
         'tuesday': 'Martedì',
@@ -384,53 +575,79 @@ def translate_day(day):
     }
     return italian_days[day]
 
-# Function to get the current day of the week
+
 def get_current_day():
+    """
+    Get the current day of the week.
+
+    Returns:
+        str: The current day of the week in lowercase (e.g., 'monday').
+    """
     return datetime.datetime.now().strftime('%A').lower()
 
-# Function to read the CSV file for the current day
+
 def get_therapy_plan_display(day):
+    """
+    Read the CSV file for the given day and format it for display.
+
+    Args:
+        day (str): The day of the week in lowercase (e.g., 'monday').
+
+    Returns:
+        pandas.DataFrame: The therapy plan for the given day, with columns renamed and NaN values replaced.
+    """
     file_path = f'../therapy_plan/therapy_plan_{day}.csv'
     df = pd.read_csv(file_path)
-
-    # Drop rows where all columns except "Hour" are NaN
     df = df.dropna(subset=df.columns.difference(['hour']), how='all')
-
-    # Replace NaN values with empty strings
     df = df.fillna('')
-
-    # Rename the columns
     column_mapping = {'hour': 'Orario'}
     for i in range(1, (len(df.columns) - 1) // 2 + 1):
         column_mapping[f'medication_{i}'] = f'Medicinale {i}'
         column_mapping[f'quantity_medication_{i}'] = f'Quantità {i}'
-
     df = df.rename(columns=column_mapping)
-
     return df
+
 
 @app.route('/')
 def index():
+    """
+    Render the main index page with the therapy plan for the current day.
+
+    Returns:
+        str: The rendered HTML for the index page.
+    """
     current_day = get_current_day()
     display_day = translate_day(get_current_day())
     therapy_plan_display = get_therapy_plan_display(current_day)
     return render_template('index.html', therapy_plan_display=therapy_plan_display.to_dict(orient='records'), columns=therapy_plan_display.columns, current_day=current_day, display_day=display_day)
 
+
 @app.route('/current_time')
 def current_time():
+    """
+    Get the current date and time, formatted with the Italian day name.
+
+    Returns:
+        flask.Response: JSON response containing the current date and time.
+    """
     now = datetime.datetime.now()
-    day_of_week = now.strftime('%A').lower()  # Get full day name in English and convert to lowercase
-    italian_day = translate_day(day_of_week)  # Translate day to Italian
-    date_str = now.strftime(f'{italian_day} - %d/%m/%Y')  # Format date with Italian day
-    time_str = now.strftime('%H:%M:%S')  # Format time
+    day_of_week = now.strftime('%A').lower()
+    italian_day = translate_day(day_of_week)
+    date_str = now.strftime(f'{italian_day} - %d/%m/%Y')
+    time_str = now.strftime('%H:%M:%S')
     return jsonify(date=date_str, time=time_str)
+
 
 @app.route('/next_medication')
 def next_medication():
-    now = datetime.datetime.now().strftime('%H:%M')  # Get current time as HH:MM
-    therapy_plan_alert = get_therapy_plan(get_current_day())
+    """
+    Get the next medication time and details.
 
-    # Find the next medication time after the current time
+    Returns:
+        flask.Response: JSON response containing the next medication time and details.
+    """
+    now = datetime.datetime.now().strftime('%H:%M')
+    therapy_plan_alert = get_therapy_plan(get_current_day())
     next_time = None
     next_medications = None
     for time in sorted(therapy_plan_alert.keys()):
@@ -438,11 +655,11 @@ def next_medication():
             next_time = time
             next_medications = therapy_plan_alert[time]
             break
-
     if next_time:
         return jsonify(time=next_time, medications=next_medications)
     else:
         return jsonify(time=None, medications=None)
+
 
 if __name__ == '__main__':
     background_thread = threading.Thread(target=interaction)

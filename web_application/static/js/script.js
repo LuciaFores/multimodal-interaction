@@ -1,5 +1,16 @@
+/**
+ * This script sets up the front-end behavior for updating time, 
+ * displaying medication alerts, and handling background changes via Socket.IO events.
+ */
+
 document.addEventListener('DOMContentLoaded', function () {
+    
+    /**
+     * Fetches the current time and the next medication information from the server.
+     * Updates the relevant elements in the DOM with this information.
+     */
     function updateTime() {
+        // Fetch current date and time
         fetch('/current_time')
             .then(response => response.json())
             .then(data => {
@@ -7,6 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('current-time').innerText = data.time;
             });
 
+        // Fetch next medication time and details
         fetch('/next_medication')
             .then(response => response.json())
             .then(data => {
@@ -23,36 +35,38 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
+    // Initial call to update time and set an interval to update every 1 second
     updateTime();
-    setInterval(updateTime, 1000); // Update every 10 seconds
+    setInterval(updateTime, 1000);
 
-    // Setup Socket.IO
+    // Setup Socket.IO connection
     const socket = io();
 
-    // Listen for background change events
+    /**
+     * Listener for 'background_event_change' event from Socket.IO.
+     * Changes the background image and hides specific elements.
+     * @param {Object} data - Contains the image filename to be set as background.
+     */
     socket.on('background_event_change', function (data) {
         const backgroundImageDiv = document.getElementById('background-image');
         backgroundImageDiv.style.backgroundImage = `url('/static/images/${data.image}')`;
-        var therapyPlanElement = document.getElementById('therapy-plan');
-        therapyPlanElement.style.display = 'none';
-        var clockWidgetElement = document.getElementById('clock-widget');
-        clockWidgetElement.style.display = 'none';
-        var alertElement = document.getElementById('alert');
-        alertElement.style.display = 'none';
-        var alertMedicationElement = document.getElementById('alert-medication');
-        alertMedicationElement.style.display = 'none';
+        document.getElementById('therapy-plan').style.display = 'none';
+        document.getElementById('clock-widget').style.display = 'none';
+        document.getElementById('alert').style.display = 'none';
+        document.getElementById('alert-medication').style.display = 'none';
     });
 
+    /**
+     * Listener for 'background_idle_change' event from Socket.IO.
+     * Changes the background image and shows specific elements.
+     * @param {Object} data - Contains the image filename to be set as background.
+     */
     socket.on('background_idle_change', function (data) {
         const backgroundImageDiv = document.getElementById('background-image');
         backgroundImageDiv.style.backgroundImage = `url('/static/images/${data.image}')`;
-        var therapyPlanElement = document.getElementById('therapy-plan');
-        therapyPlanElement.style.display = '';
-        var clockWidgetElement = document.getElementById('clock-widget');
-        clockWidgetElement.style.display = '';
-        var alertElement = document.getElementById('alert');
-        alertElement.style.display = '';
-        var alertMedicationElement = document.getElementById('alert-medication');
-        alertMedicationElement.style.display = '';
+        document.getElementById('therapy-plan').style.display = '';
+        document.getElementById('clock-widget').style.display = '';
+        document.getElementById('alert').style.display = '';
+        document.getElementById('alert-medication').style.display = '';
     });
 });

@@ -1,92 +1,102 @@
+/* Style for the body element */
 body {
-    font-family: 'Noto Sans', sans-serif;
-    margin: 0;
-    padding: 0;
-    width: 100%;
+    font-family: 'Noto Sans', sans-serif; /* Font family for the entire document */
+    margin: 0; /* Remove default margin */
+    padding: 0; /* Remove default padding */
+    width: 100%; /* Set body width to 100% of the viewport */
 }
 
-
+/* Style for the background image */
 .background-image {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    background-image: url('../images/background.jpg');
+    position: fixed; /* Fix the background image in place */
+    top: 0; /* Align to the top of the viewport */
+    left: 0; /* Align to the left of the viewport */
+    width: 100%; /* Cover the entire width of the viewport */
+    height: 100%; /* Cover the entire height of the viewport */
+    z-index: -1; /* Place the background image behind other elements */
+    background-image: url('../images/background.jpg'); /* Path to the background image */
     background-size: 100% 100%; /* Stretch to cover entire background */
-    background-position: center;
-    background-repeat: no-repeat;
+    background-position: center; /* Center the background image */
+    background-repeat: no-repeat; /* Do not repeat the background image */
 }
 
+/* Style for the container */
 .container {
-    display: flex;
-    justify-content: space-between;
-    padding: 20px;
+    display: flex; /* Use flexbox for layout */
+    justify-content: space-between; /* Space out items evenly */
+    padding: 20px; /* Add padding around the container */
 }
 
+/* Style for the therapy plan container */
 .therapy-plan {
-    position: absolute;
-    top: 20px;
-    left: 20px;
+    position: absolute; /* Position relative to the nearest positioned ancestor */
+    top: 20px; /* Position 20px from the top */
+    left: 20px; /* Position 20px from the left */
     background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background for readability */
-    padding: 10px;
-    border-radius: 10px;
+    padding: 10px; /* Add padding inside the element */
+    border-radius: 10px; /* Rounded corners */
 }
 
-h2{
-    font-size: 36px;
+/* Style for the headings */
+h2 {
+    font-size: 36px; /* Set font size for h2 elements */
 }
 
+/* Style for the therapy plan table */
 .therapy-plan table {
-    border-collapse: collapse;
-    width: 100%;
+    border-collapse: collapse; /* Collapse table borders */
+    width: 100%; /* Full width table */
 }
 
+/* Style for the table headers */
 .therapy-plan th {
-    font-size: 20px;
-    border: 1px solid black;
-    padding: 8px;
+    font-size: 20px; /* Set font size for table headers */
+    border: 1px solid black; /* Border for table headers */
+    padding: 8px; /* Padding inside table headers */
 }
 
+/* Style for the table cells */
 .therapy-plan td {
-    font-size: 18px;
-    border: 1px solid black;
-    padding: 8px;
+    font-size: 18px; /* Set font size for table cells */
+    border: 1px solid black; /* Border for table cells */
+    padding: 8px; /* Padding inside table cells */
 }
 
+/* Style for the clock widget */
 .clock-widget {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    font-size: 30px;
-    text-align: right;
+    position: absolute; /* Position relative to the nearest positioned ancestor */
+    top: 20px; /* Position 20px from the top */
+    right: 20px; /* Position 20px from the right */
+    font-size: 30px; /* Set font size for the clock */
+    text-align: right; /* Align text to the right */
     background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background for readability */
-    padding: 10px;
-    border-radius: 10px;
+    padding: 10px; /* Add padding inside the element */
+    border-radius: 10px; /* Rounded corners */
 }
 
+/* Style for the alert box */
 .alert {
-    position: absolute;
-    top: 200px;
-    right: 20px;
-    width: 500px;
-    font-size: 20px;
-    background-color: #e6e6fa;
-    color: black;
-    padding: 10px;
-    border-radius: 5px;
-    border: 2px solid #9400d3;
+    position: absolute; /* Position relative to the nearest positioned ancestor */
+    top: 200px; /* Position 200px from the top */
+    right: 20px; /* Position 20px from the right */
+    width: 500px; /* Set the width of the alert box */
+    font-size: 20px; /* Set font size for the alert text */
+    background-color: #e6e6fa; /* Set background color */
+    color: black; /* Set text color */
+    padding: 10px; /* Add padding inside the element */
+    border-radius: 5px; /* Rounded corners */
+    border: 2px solid #9400d3; /* Border color and thickness */
 }
 
+/* Style for the medication alert box */
 .alert-medication {
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    font-size: 20px;
-    background-color: #e6e6fa;
-    color: black;
-    padding: 10px;
-    border-radius: 5px;
-    border: 2px solid #9400d3;
+    position: absolute; /* Position relative to the nearest positioned ancestor */
+    bottom: 20px; /* Position 20px from the bottom */
+    left: 20px; /* Position 20px from the left */
+    font-size: 20px; /* Set font size for the medication alert text */
+    background-color: #e6e6fa; /* Set background color */
+    color: black; /* Set text color */
+    padding: 10px; /* Add padding inside the element */
+    border-radius: 5px; /* Rounded corners */
+    border: 2px solid #9400d3; /* Border color and thickness */
 }
