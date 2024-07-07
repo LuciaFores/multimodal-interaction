@@ -95,7 +95,7 @@ def get_chat_id(handle, data):
                 return str(i['message']['chat']['id'])
 
 def get_patient_data():
-    df_registry = pd.read_csv('../patient_registry_test.csv')
+    df_registry = pd.read_csv('../patient_registry.csv')
     load_dotenv()
     BOT_TOKEN = os.getenv("BOT_TOKEN")  
     bot_data = get_bot_data(BOT_TOKEN)
