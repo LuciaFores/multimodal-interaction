@@ -63,11 +63,11 @@ async def main():
             day = italian_days[match.group(3)]
             hour = match.group(4)
             minute = match.group(5)
-            image_path = f'medicine/{match.group(3)}'
+            image_path = f'../medications/{match.group(3)}'
         await asyncio.sleep(1)
         await event.respond(f"Ecco il recap per {patient_name}.\nSi sente {feeling}.\n{day} alle {hour}:{minute} ha preso i seguenti farmaci:")
-        for img in os.listdir(f"./{image_path}"):
-            await client.send_file(event.chat_id, f"./{image_path}/{img}", caption=img.split(".")[0])
+        for img in os.listdir(image_path):
+            await client.send_file(event.chat_id, f"{image_path}/{img}", caption=img.split(".")[0])
 
 
 if __name__ == "__main__":

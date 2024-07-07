@@ -10,10 +10,10 @@ document.addEventListener('DOMContentLoaded', function () {
         fetch('/next_medication')
             .then(response => response.json())
             .then(data => {
-                if (data.time && data.medicines) {
+                if (data.time && data.medications) {
                     let alertText = `Prossimo farmaco alle ${data.time}: `;
-                    data.medicines.forEach(medicine => {
-                        alertText += `${medicine[0]} (${medicine[1]}), `;
+                    data.medications.forEach(medication => {
+                        alertText += `${medication[0]} (${medication[1]}), `;
                     });
                     alertText = alertText.slice(0, -2); // Remove the last comma and space
                     document.getElementById('next-medication-alert').innerText = alertText;

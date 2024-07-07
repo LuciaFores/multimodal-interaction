@@ -115,16 +115,16 @@ def get_therapy_plan(day):
     df_therapy_plan = pd.read_csv(f'../therapy_plan/therapy_plan_{day}.csv')
     # create a dictionary with the therapy plan data
     therapy_plan = {}
-    # iterate over the therapy plan data and get only the rows for which the column medicine_1 is not empty
+    # iterate over the therapy plan data and get only the rows for which the column medication_1 is not empty
     for _, row in df_therapy_plan.iterrows():
-        if not pd.isna(row['medicine_1']): # meaning that the patient must take at least one medicine at that time
-            # get all the medicines that the patient must take at that time
-            medicines_quantities = row.drop(['hour']).dropna().tolist()
-            therapy = [(x, y) for x, y in zip(medicines_quantities[::2], medicines_quantities[1::2])]
+        if not pd.isna(row['medication_1']): # meaning that the patient must take at least one medication at that time
+            # get all the medications that the patient must take at that time
+            medications_quantities = row.drop(['hour']).dropna().tolist()
+            therapy = [(x, y) for x, y in zip(medications_quantities[::2], medications_quantities[1::2])]
             therapy_plan[row['hour']] = therapy
     return therapy_plan
 
-def speech_syntesis(text, mixer):
+def speech_synthesis(text, mixer):
     mp3_fp = synthesize_speech(text)
     play_speech(mixer, mp3_fp)
     return
@@ -142,29 +142,29 @@ def send_help_message(patient, mixer):
         text = f"{patient['name']} invio un messaggio ai tuoi caregiver."
     else:
         text = f"{patient['name']} invio  un messaggio al tuo caregiver."
-    speech_syntesis(text, mixer)
+    speech_synthesis(text, mixer)
     for chat_id in patient['chat_ids']:
         send_telegram_message(chat_id, f"/sendhelp<{patient['name']}>")
     if has_multiple_caregivers:
         text = f"Okay {patient['name']}, ho inviato un messaggio ai tuoi caregiver, ti contatteranno al più presto."
     else:
         text = f"Okay {patient['name']}, ho inviato un messaggio al tuo caregiver, ti contatterà al più presto."
-    speech_syntesis(text, mixer)
+    speech_synthesis(text, mixer)
     return
 
 def greet_patient(patient, mixer):
     text = f"Ciao {patient['name']}, come ti senti?"
-    speech_syntesis(text, mixer)
+    speech_synthesis(text, mixer)
     return
 
-def speech_therapy_plan_info(patient, medicines, mixer):
+def speech_therapy_plan_info(patient, medications, mixer):
     text = f"{patient['name']} è il momento di prendere i seguenti farmaci: "
-    for medicine in medicines:
-        text += medicine[0] + ", "
-    speech_syntesis(text, mixer)
+    for medication in medications:
+        text += medication[0] + ", "
+    speech_synthesis(text, mixer)
     text = "Per ogni farmaco mi mostrerai la scatola e io ti dirò se è quella corretta;"
     text += "nel caso in cui lo sia ti dirò quanto prenderne"
-    speech_syntesis(text, mixer)
+    speech_synthesis(text, mixer)
     return
 
 def analyze_feelings(patient, feelings, mixer, stream, recognizer):
@@ -172,7 +172,7 @@ def analyze_feelings(patient, feelings, mixer, stream, recognizer):
     if feelings.startswith("ben"):
         socketio.emit('background_event_change', {'image': 'medication_happy_background.jpg'})
         text = f"Bene {patient['name']}, sono contento di sentire che ti senti bene!"
-        speech_syntesis(text, mixer)
+        speech_synthesis(text, mixer)
         return "bene"
     elif feelings.startswith("mal"):
         socketio.emit('background_event_change', {'image': 'medication_sad_background.jpg'})
@@ -181,7 +181,7 @@ def analyze_feelings(patient, feelings, mixer, stream, recognizer):
             text += "Vuoi inviare un messaggio di aiuto ai tuoi caregiver?"
         else:
             text += "Vuoi inviare un messaggio di aiuto al tuo caregiver?"
-        speech_syntesis(text, mixer)
+        speech_synthesis(text, mixer)
         while True:
             speech = None
             stream.start_stream()
@@ -197,21 +197,21 @@ def analyze_feelings(patient, feelings, mixer, stream, recognizer):
                 break
             else:
                 text = "Scusa non ho capito, potresti rispondermi con sì o no?"
-                speech_syntesis(text, mixer)
+                speech_synthesis(text, mixer)
         return "male"
     else:
         text = "Scusa non ho capito, potresti rispondermi con bene o male?"
-        speech_syntesis(text, mixer)
+        speech_synthesis(text, mixer)
         return ""
     
-def speech_medicine_instructions(medicine, mixer):
-    text = f"Prendi {medicine}; quando sei pronto a farmi riconoscere la scatola dimmi foto."
-    speech_syntesis(text, mixer)
+def speech_medication_instructions(medication, mixer):
+    text = f"Prendi {medication}; quando sei pronto a farmi riconoscere la scatola dimmi foto."
+    speech_synthesis(text, mixer)
     return
 
-# define a function to take a picture of the medicine box
-# and save the picture in the folder medicine/today/{medicine}.jpg
-def take_picture(today, medicine):
+# define a function to take a picture of the medication box
+# and save the picture in the folder medications/today/{medication}.jpg
+def take_picture(today, medication):
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("Error: Could not open video capture device.")
@@ -223,28 +223,28 @@ def take_picture(today, medicine):
     if not ret:
         print("Error: Could not read frame from video capture device.")
         return
-    cv2.imwrite(f'../medicine/{today}/{medicine}.jpg', frame)
+    cv2.imwrite(f'../medications/{today}/{medication}.jpg', frame)
     return
 
-# define a function to recognize the medicine box
-# the function will perform OCR on the image, then if the parameter medicine of the function
+# define a function to recognize the medication box
+# the function will perform OCR on the image, then if the parameter medication of the function
 # is similar to one of the results of the OCR it will return True, otherwise False
-def recognize_medicine(today, medicine, ocr_model, threshold=80):
-    img_path = f'../medicine/{today}/{medicine}.jpg'
+def recognize_medication(today, medication, ocr_model, threshold=80):
+    img_path = f'../medications/{today}/{medication}.jpg'
     results = ocr_model.ocr(img_path)
     if results != [None]:
         for result in results:
             for item in result:
                 predicted_name, _ = item[1]
                 predicted_name = predicted_name.lower()
-                if fuzz.partial_ratio(medicine, predicted_name) >= threshold:
+                if fuzz.partial_ratio(medication, predicted_name) >= threshold:
                     return True
     return False
 
-def get_medicine_instructions(patient, quantity, mixer):
+def get_medication_instructions(patient, quantity, mixer):
     text = f"Bene {patient['name']} è la scatola corretta, devi prenderne {quantity}."
     text += "Quando sei pronto a procedere con il prossimo farmaco pronuncia avanti"
-    speech_syntesis(text, mixer)
+    speech_synthesis(text, mixer)
     return
 
 def goodbye_patient(patient, mixer):
@@ -260,7 +260,7 @@ def goodbye_patient(patient, mixer):
         text += "così invierò un messaggio di aiuto ai tuoi caregiver"
     else:
         text += "così invierò un messaggio di aiuto al tuo caregiver"
-    speech_syntesis(text, mixer)
+    speech_synthesis(text, mixer)
     return
 
 def send_recap_message(patient, feeling, today, hour, minute):
@@ -269,9 +269,9 @@ def send_recap_message(patient, feeling, today, hour, minute):
     return
 
 def delete_images(today):
-    if os.listdir(f'../medicine/{today}'):
-        for image in os.listdir(f'../medicine/{today}'):
-            os.remove(f'../medicine/{today}/{image}')
+    if os.listdir(f'../medications/{today}'):
+        for image in os.listdir(f'../medications/{today}'):
+            os.remove(f'../medications/{today}/{image}')
     return
 
 def interaction():
@@ -304,7 +304,7 @@ def interaction():
             speech = None
             stream.start_stream()
             socketio.emit('background_idle_change', {'image': 'background.jpg'})
-        # if the helper finds out that is time to take a medicine start the therapy plan procedure
+        # if the helper finds out that is time to take a medication start the therapy plan procedure
         current_time = time.strftime('%H:%M', time.localtime())
         if current_time in therapy_plan.keys():
             stream.stop_stream()
@@ -324,13 +324,13 @@ def interaction():
                 if feeling != "":
                     break
             socketio.emit('background_event_change', {'image': 'medication_background.jpg'})
-            # get the current medicines to take
-            medicines = therapy_plan[current_time]
+            # get the current medications to take
+            medications = therapy_plan[current_time]
             # pronunce the therapy plan rules
-            speech_therapy_plan_info(patient, medicines, mixer)
-            for medicine, quantity in medicines:
+            speech_therapy_plan_info(patient, medications, mixer)
+            for medication, quantity in medications:
                 socketio.emit('background_event_change', {'image': 'medication_background.jpg'})
-                speech_medicine_instructions(medicine, mixer)
+                speech_medication_instructions(medication, mixer)
                 box_recognized = False
                 # while the box is not recognized
                 while not box_recognized:
@@ -342,12 +342,12 @@ def interaction():
                         if speech != None and 'foto' in speech:
                             break
                     stream.stop_stream()
-                    take_picture(today, medicine)
-                    # recognize the medicine box
-                    box_recognized = recognize_medicine(today, medicine, ocr_model)
+                    take_picture(today, medication)
+                    # recognize the medication box
+                    box_recognized = recognize_medication(today, medication, ocr_model)
                     if box_recognized:
                         socketio.emit('background_event_change', {'image': 'medication_happy_background.jpg'})
-                        get_medicine_instructions(patient, quantity, mixer)
+                        get_medication_instructions(patient, quantity, mixer)
                         stream.start_stream()
                         while True:
                             speech = None
@@ -357,7 +357,7 @@ def interaction():
                     else:
                         socketio.emit('background_event_change', {'image': 'medication_sad_background.jpg'})
                         text = "Scusa non è la scatola corretta, potresti riprovare?"
-                        speech_syntesis(text, mixer)
+                        speech_synthesis(text, mixer)
             stream.stop_stream()
             socketio.emit('background_event_change', {'image': 'medication_background.jpg'})
             goodbye_patient(patient, mixer)
@@ -402,8 +402,8 @@ def get_therapy_plan_display(day):
     # Rename the columns
     column_mapping = {'hour': 'Orario'}
     for i in range(1, (len(df.columns) - 1) // 2 + 1):
-        column_mapping[f'medicine_{i}'] = f'Medicinale_{i}'
-        column_mapping[f'quantity_medicine_{i}'] = f'Quantità_{i}'
+        column_mapping[f'medication_{i}'] = f'Medicinale {i}'
+        column_mapping[f'quantity_medication_{i}'] = f'Quantità {i}'
 
     df = df.rename(columns=column_mapping)
 
@@ -432,17 +432,17 @@ def next_medication():
 
     # Find the next medication time after the current time
     next_time = None
-    next_medicines = None
+    next_medications = None
     for time in sorted(therapy_plan_alert.keys()):
         if time > now:
             next_time = time
-            next_medicines = therapy_plan_alert[time]
+            next_medications = therapy_plan_alert[time]
             break
 
     if next_time:
-        return jsonify(time=next_time, medicines=next_medicines)
+        return jsonify(time=next_time, medications=next_medications)
     else:
-        return jsonify(time=None, medicines=None)
+        return jsonify(time=None, medications=None)
 
 if __name__ == '__main__':
     background_thread = threading.Thread(target=interaction)
