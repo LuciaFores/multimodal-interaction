@@ -1,9 +1,4 @@
-idea.txt
-requirements_prova.txt
 model
-patient_registry_test.csv
-therapy_plan.csv
-ocr_test
 .env
 *.session
 *.session-journal
